@@ -70,6 +70,7 @@ Vec2 world_to_map(Map map, Vec2 v) {
 void render_map(Map map) {
   DrawRectangle(map.pos.x, map.pos.y, map.w, map.h, BLACK);
 
+  // TODO: Do not compute cell w/h on each frame
   float cell_width = (float)map.w / (float)WORLD_WIDTH;
   float cell_height = (float)map.h / (float)WORLD_HEIGHT;
 
