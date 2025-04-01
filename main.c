@@ -47,6 +47,12 @@ typedef struct {
   int x, y, w, h;
 } Map;
 
+// Camera in world coordinates
+typedef struct {
+  Vec2 dir;           // Camera direction
+  Vec2 wf, wl, wr;    // Specific points defining the FOV
+} Cam;
+
 // Convert world coordinates to map coordinates
 Vec2 world_to_map(Map map, Vec2 v) {
   float x = (float)map.w / (float)WORLD_WIDTH * v.x;
@@ -86,9 +92,32 @@ void render_map(Map map) {
   }
 }
 
-void render_map_player(Map map, Vec2 player) {
+void render_map_camera(Map map, Vec2 player, Cam camera) {
   Vec2 pos = world_to_map(map, player);
   DrawCircle((int)pos.x, (int)pos.y, 5.0f, RED);
+
+  // Draw camera with a FOV of 90°
+  Vec2 mf = world_to_map(map, camera.wf);
+  DrawCircle((int)mf.x, (int)mf.y, 2.5f, PINK);
+  DrawLine(pos.x, pos.y, mf.x, mf.y, PINK);
+
+  // Left FOV point
+  Vec2 ml = world_to_map(map, camera.wl);
+  DrawCircle((int)ml.x, (int)ml.y, 2.5f, ORANGE);
+  DrawLine(pos.x, pos.y, ml.x, ml.y, ORANGE);
+
+  // Right FOV point
+  Vec2 mr = world_to_map(map, camera.wr);
+  DrawCircle((int)mr.x, (int)mr.y, 2.5f, ORANGE);
+  DrawLine(pos.x, pos.y, mr.x, mr.y, ORANGE);
+
+  DrawLine(ml.x, ml.y, mr.x, mr.y, ORANGE);
+}
+
+void update_camera(Cam *camera, Vec2 player) {
+  camera->wf = vec2_add(player, camera->dir);
+  camera->wl = vec2_add(camera->wf, (Vec2){camera->dir.y, -camera->dir.x});
+  camera->wr = vec2_add(camera->wf, (Vec2){-camera->dir.y, camera->dir.x});
 }
 
 int main(void)
@@ -98,6 +127,13 @@ int main(void)
 
   Vec2 player = {5.5f, 6.5f};
 
+  Cam camera = {
+    {0.0f, -1.0f},    // Camera direction
+    {0}, {0}, {0}
+  };
+
+  update_camera(&camera, player);
+
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Raycasting in C");
   SetTargetFPS(60);
 
@@ -106,7 +142,7 @@ int main(void)
     BeginDrawing();
       ClearBackground(BACKGROUND);
       render_map(map);
-      render_map_player(map, player);
+      render_map_camera(map, player, camera);
     EndDrawing();
   }
 
