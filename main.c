@@ -31,6 +31,17 @@ typedef struct {
   int x, y, w, h;
 } Map;
 
+typedef struct {
+  float x, y;
+} Vec2;
+
+// Convert world coordinates to map coordinates
+Vec2 world_to_map(Map map, Vec2 v) {
+  float x = (float)map.w / (float)WORLD_WIDTH * v.x;
+  float y = (float)map.w / (float)WORLD_HEIGHT * v.y;
+  return (Vec2){x + map.x, y + map.y};
+}
+
 void render_map(Map map) {
   DrawRectangle(map.x, map.y, map.w, map.h, BLACK);
 
@@ -63,10 +74,17 @@ void render_map(Map map) {
   }
 }
 
+void render_player(Map map, Vec2 player) {
+  Vec2 pos = world_to_map(map, player);
+  DrawCircle((int)pos.x, (int)pos.y, 5.0f, RED);
+}
+
 int main(void)
 {
   // Define mini map position and size
   Map map = {20, 20, 300, 300};
+
+  Vec2 player = {5.5f, 6.5f};
 
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Raycasting in C");
   SetTargetFPS(60);
@@ -76,6 +94,7 @@ int main(void)
     BeginDrawing();
       ClearBackground(BACKGROUND);
       render_map(map);
+      render_player(map, player);
     EndDrawing();
   }
 
