@@ -4,9 +4,8 @@
 
 #define BACKGROUND CLITERAL(Color){20, 20, 20, 255}
 
-#define FACTOR         60
-#define WINDOW_WIDTH   16*FACTOR
-#define WINDOW_HEIGHT  9*FACTOR
+#define WINDOW_WIDTH   960
+#define WINDOW_HEIGHT  540
 
 #define WORLD_WIDTH    8
 #define WORLD_HEIGHT   8
@@ -53,6 +52,10 @@ float vec2_square_len(Vec2 v) {
   return v.x * v.x + v.y * v.y;
 }
 
+float vec2_len(Vec2 v) {
+  return sqrtf(vec2_square_len(v));
+}
+
 Vec2 vec2_rotate(Vec2 v, float angle) {
   float ca = cosf(angle);
   float sa = sinf(angle);
@@ -82,6 +85,8 @@ Vec2 world_to_map(Map map, Vec2 v) {
 }
 
 void is_ray_hit_wall(CastResult *res, Vec2 p, int step_x, int step_y) {
+  res->ct = p;
+
   Vec2 veps = {(float)step_x * 0.00001f, (float)step_y * 0.00001f};
   p = vec2_add(p, veps);
 
@@ -94,7 +99,7 @@ void is_ray_hit_wall(CastResult *res, Vec2 p, int step_x, int step_y) {
   }
 }
 
-CastResult cast_ray(Map map, Vec2 player, Cam camera, float factor) {
+CastResult cast_ray(Vec2 player, Cam camera, float factor) {
 
   CastResult res = {0};
 
@@ -102,9 +107,6 @@ CastResult cast_ray(Map map, Vec2 player, Cam camera, float factor) {
   res.vp = vec2_scale(res.vp, factor);
   res.vp = vec2_add(res.vp, camera.wl);
   Vec2 ray_dir = vec2_sub(res.vp, player);
-
-  Vec2 mp = world_to_map(map, res.vp);
-  DrawCircle((int)mp.x, (int)mp.y, 2.5f, GREEN);
 
   // NOTE:
   // x1 = player.x
@@ -161,16 +163,12 @@ CastResult cast_ray(Map map, Vec2 player, Cam camera, float factor) {
 
     if (xd_len <= yd_len) {
       if (xt.x > 0 && xt.x <= 8 && xt.y > 0 && xt.y <= 8) {
-        mp = world_to_map(map, xt);
-        DrawCircle((int)mp.x, (int)mp.y, 2.5f, YELLOW);
         is_ray_hit_wall(&res, xt, step_x, step_y);
         sx += step_x;
       }
     }
     else {
       if (yt.x > 0 && yt.x <= 8 && yt.y > 0 && yt.y <= 8) {
-        mp = world_to_map(map, yt);
-        DrawCircle((int)mp.x, (int)mp.y, 2.5f, BLUE);
         is_ray_hit_wall(&res, yt, step_x, step_y);
         sy += step_y;
       }
@@ -236,7 +234,30 @@ void render_map_camera(Map map, Vec2 player, Cam camera) {
 
   DrawLine(ml.x, ml.y, mr.x, mr.y, ORANGE);
 
-  cast_ray(map, player, camera, 0.25f);
+  CastResult r = cast_ray(player, camera, 0.25f);
+  if (r.wall > 0) {
+    Vec2 mp = world_to_map(map, r.ct);
+    DrawCircle((int)mp.x, (int)mp.y, 2.5f, RED);
+  }
+}
+
+void render_world(Vec2 player, Cam camera) {
+  float factor;
+  CastResult res;
+
+  for (int x = 0; x < WINDOW_WIDTH; x++) {
+    factor = (float)x / (float)WINDOW_WIDTH;
+    res = cast_ray(player, camera, factor);
+
+    if (res.wall != 0) {
+      Vec2 wd = vec2_sub(res.ct, res.vp);
+      float d = vec2_len(wd);
+      int h = (int)(WINDOW_HEIGHT / d);
+      int y1 = WINDOW_HEIGHT * 0.5 - h / 2;
+      int y2 = WINDOW_HEIGHT * 0.5 + h / 2;
+      DrawLineEx((Vector2){x, y1}, (Vector2){x, y2}, 1.1f, wall_colors[res.wall]);
+    }
+  }
 }
 
 void update_camera(Cam *camera, Vec2 player) {
@@ -251,7 +272,7 @@ int main(void)
   float rot_speed = 0.025f;
 
   // Define mini map position and size
-  Map map = {{20, 20}, 300, 300, {0}};
+  Map map = {{20, 20}, 200, 200, {0}};
   map.ratio.x = (float)map.w / (float)WORLD_WIDTH;
   map.ratio.y = (float)map.h / (float)WORLD_HEIGHT;
 
@@ -288,11 +309,13 @@ int main(void)
 
     BeginDrawing();
       ClearBackground(BACKGROUND);
+      render_world(player, camera);
       render_map(map);
       render_map_camera(map, player, camera);
     EndDrawing();
   }
 
   CloseWindow();
+
   return 0;
 }
