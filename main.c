@@ -1,3 +1,4 @@
+#include <math.h>
 #include <raylib.h>
 
 #define BACKGROUND CLITERAL(Color){20, 20, 20, 255}
@@ -41,6 +42,12 @@ Vec2 vec2_sub(Vec2 a, Vec2 b) {
 
 Vec2 vec2_mul(Vec2 a, Vec2 b) {
   return (Vec2){a.x * b.x, a.y * b.y};
+}
+
+Vec2 vec2_rotate(Vec2 v, float angle) {
+  float ca = cosf(angle);
+  float sa = sinf(angle);
+  return (Vec2){v.x*ca - v.y*sa, v.x*sa + v.y*ca};
 }
 
 typedef struct {
@@ -123,6 +130,7 @@ void update_camera(Cam *camera, Vec2 player) {
 int main(void)
 {
   Vec2 move_speed = {0.025f, 0.025f};
+  float rot_speed = 0.025f;
 
   // Define mini map position and size
   Map map = {{20, 20}, 300, 300, {0}};
@@ -135,7 +143,6 @@ int main(void)
     {0.0f, -1.0f},    // Camera direction
     {0}, {0}, {0}     // FOV key points
   };
-
   update_camera(&camera, player);
 
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Raycasting in C");
@@ -149,6 +156,15 @@ int main(void)
     }
     if (IsKeyDown(KEY_DOWN)) {
       player = vec2_sub(player, vec2_mul(camera.dir, move_speed));
+      update_camera(&camera, player);
+    }
+
+    if (IsKeyDown(KEY_LEFT)) {
+      camera.dir = vec2_rotate(camera.dir, -rot_speed);
+      update_camera(&camera, player);
+    }
+    if (IsKeyDown(KEY_RIGHT)) {
+      camera.dir = vec2_rotate(camera.dir, rot_speed);
       update_camera(&camera, player);
     }
 
