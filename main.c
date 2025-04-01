@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <math.h>
 #include <raylib.h>
 
@@ -44,6 +45,14 @@ Vec2 vec2_mul(Vec2 a, Vec2 b) {
   return (Vec2){a.x * b.x, a.y * b.y};
 }
 
+Vec2 vec2_scale(Vec2 v, float factor) {
+  return (Vec2){v.x*factor, v.y*factor};
+}
+
+float vec2_square_len(Vec2 v) {
+  return v.x * v.x + v.y * v.y;
+}
+
 Vec2 vec2_rotate(Vec2 v, float angle) {
   float ca = cosf(angle);
   float sa = sinf(angle);
@@ -62,9 +71,115 @@ typedef struct {
   Vec2 wf, wl, wr;    // Specific points defining the FOV
 } Cam;
 
+typedef struct {
+  Vec2 vp, ct;
+  int cell_x, cell_y, wall;
+} CastResult;
+
 // Convert world coordinates to map coordinates
 Vec2 world_to_map(Map map, Vec2 v) {
   return vec2_add(vec2_mul(v, map.ratio), map.pos);
+}
+
+void is_ray_hit_wall(CastResult *res, Vec2 p, int step_x, int step_y) {
+  Vec2 veps = {(float)step_x * 0.00001f, (float)step_y * 0.00001f};
+  p = vec2_add(p, veps);
+
+  int x = (int)floor(p.x);
+  int y = (int)floor(p.y);
+  if (p.x >= 0 && p.x < 8 && p.y >= 0 && p.y < 8) {
+    res->cell_x = x;
+    res->cell_y = y;
+    res->wall = world[y][x];
+  }
+}
+
+CastResult cast_ray(Map map, Vec2 player, Cam camera, float factor) {
+
+  CastResult res = {0};
+
+  res.vp = vec2_sub(camera.wr, camera.wl);
+  res.vp = vec2_scale(res.vp, factor);
+  res.vp = vec2_add(res.vp, camera.wl);
+  Vec2 ray_dir = vec2_sub(res.vp, player);
+
+  Vec2 mp = world_to_map(map, res.vp);
+  DrawCircle((int)mp.x, (int)mp.y, 2.5f, GREEN);
+
+  // NOTE:
+  // x1 = player.x
+  // y1 = player.y
+  // --
+  // x2 = wp.x
+  // y2 = wp.y
+  // --
+  // y = m x + b
+  // x = (y - b) / m
+  // m = (y2 - y1) / (x2 - x1)
+  // --
+  // b = y1 - ((y2 - y1) / (x2 - x1)) x1
+  // b = y1 - m * x1
+
+  float m = (res.vp.y - player.y) / (res.vp.x - player.x);
+  float b = player.y - m * player.x;
+
+  int step_x = 1;
+  int step_y = 1;
+  int sx, sy;
+
+  if (ray_dir.x >= 0) {
+    sx = ceil(res.vp.x);
+  }
+  else {
+    step_x = -1;
+    sx = floor(res.vp.x);
+  }
+
+  if (ray_dir.y >= 0) {
+    sy = ceil(res.vp.y);
+  }
+  else {
+    step_y = -1;
+    sy = floor(res.vp.y);
+  }
+
+  float x, y;
+  Vec2 xt, yt, xd, yd;
+  int max = 0;
+
+  while (max < 15 && res.wall == 0) {
+    y = m * (float)sx + b;
+    xt = (Vec2){(float)sx, y};
+
+    x = ((float)sy - b) / m;
+    yt = (Vec2){x, (float)sy};
+
+    xd = vec2_sub(xt, res.vp);
+    yd = vec2_sub(yt, res.vp);
+    float xd_len = vec2_square_len(xd);
+    float yd_len = vec2_square_len(yd);
+
+    if (xd_len <= yd_len) {
+      if (xt.x > 0 && xt.x <= 8 && xt.y > 0 && xt.y <= 8) {
+        mp = world_to_map(map, xt);
+        DrawCircle((int)mp.x, (int)mp.y, 2.5f, YELLOW);
+        is_ray_hit_wall(&res, xt, step_x, step_y);
+        sx += step_x;
+      }
+    }
+    else {
+      if (yt.x > 0 && yt.x <= 8 && yt.y > 0 && yt.y <= 8) {
+        mp = world_to_map(map, yt);
+        DrawCircle((int)mp.x, (int)mp.y, 2.5f, BLUE);
+        is_ray_hit_wall(&res, yt, step_x, step_y);
+        sy += step_y;
+      }
+    }
+
+    max++;
+  }
+
+  return res;
 }
 
 void render_map(Map map) {
@@ -120,6 +235,8 @@ void render_map_camera(Map map, Vec2 player, Cam camera) {
   DrawLine(pos.x, pos.y, mr.x, mr.y, ORANGE);
 
   DrawLine(ml.x, ml.y, mr.x, mr.y, ORANGE);
+
+  cast_ray(map, player, camera, 0.25f);
 }
 
 void update_camera(Cam *camera, Vec2 player) {
