@@ -57,8 +57,7 @@ typedef struct {
 
 // Convert world coordinates to map coordinates
 Vec2 world_to_map(Map map, Vec2 v) {
-  Vec2 a = vec2_mul(v, map.ratio);
-  return vec2_add(a, map.pos);
+  return vec2_add(vec2_mul(v, map.ratio), map.pos);
 }
 
 void render_map(Map map) {
@@ -123,6 +122,8 @@ void update_camera(Cam *camera, Vec2 player) {
 
 int main(void)
 {
+  Vec2 move_speed = {0.025f, 0.025f};
+
   // Define mini map position and size
   Map map = {{20, 20}, 300, 300, {0}};
   map.ratio.x = (float)map.w / (float)WORLD_WIDTH;
@@ -142,6 +143,15 @@ int main(void)
 
   while ( ! WindowShouldClose())
   {
+    if (IsKeyDown(KEY_UP)) {
+      player = vec2_add(player, vec2_mul(camera.dir, move_speed));
+      update_camera(&camera, player);
+    }
+    if (IsKeyDown(KEY_DOWN)) {
+      player = vec2_sub(player, vec2_mul(camera.dir, move_speed));
+      update_camera(&camera, player);
+    }
+
     BeginDrawing();
       ClearBackground(BACKGROUND);
       render_map(map);
