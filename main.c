@@ -86,7 +86,7 @@ void render_map(Map map) {
   }
 }
 
-void render_player(Map map, Vec2 player) {
+void render_map_player(Map map, Vec2 player) {
   Vec2 pos = world_to_map(map, player);
   DrawCircle((int)pos.x, (int)pos.y, 5.0f, RED);
 }
@@ -106,7 +106,7 @@ int main(void)
     BeginDrawing();
       ClearBackground(BACKGROUND);
       render_map(map);
-      render_player(map, player);
+      render_map_player(map, player);
     EndDrawing();
   }
 
