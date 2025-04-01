@@ -44,7 +44,8 @@ Vec2 vec2_mul(Vec2 a, Vec2 b) {
 }
 
 typedef struct {
-  int x, y, w, h;
+  Vec2 pos;
+  int w, h;
   Vec2 ratio;
 } Map;
 
@@ -57,11 +58,11 @@ typedef struct {
 // Convert world coordinates to map coordinates
 Vec2 world_to_map(Map map, Vec2 v) {
   Vec2 a = vec2_mul(v, map.ratio);
-  return (Vec2){a.x + map.x, a.y + map.y};
+  return vec2_add(a, map.pos);
 }
 
 void render_map(Map map) {
-  DrawRectangle(map.x, map.y, map.w, map.h, BLACK);
+  DrawRectangle(map.pos.x, map.pos.y, map.w, map.h, BLACK);
 
   float cell_width = (float)map.w / (float)WORLD_WIDTH;
   float cell_height = (float)map.h / (float)WORLD_HEIGHT;
@@ -72,7 +73,7 @@ void render_map(Map map) {
       int wall = world[y][x];
       if (wall != 0) {
         DrawRectangle(
-          (int)(x * cell_width) + map.x, (int)(y * cell_height) + map.y,
+          (int)(x * cell_width) + map.pos.x, (int)(y * cell_height) + map.pos.y,
           (int)(cell_width), (int)(cell_height),
           wall_colors[wall]);
       }
@@ -83,12 +84,12 @@ void render_map(Map map) {
   // Vertical grid lines
   for (int x = 0; x <= WORLD_WIDTH; x++) {
     at = (int)(x * cell_width);
-    DrawLine(at + map.x, map.y, at + map.x, map.h + map.y, GRAY);
+    DrawLine(at + map.pos.x, map.pos.y, at + map.pos.x, map.h + map.pos.y, GRAY);
   }
   // Horizontal grid lines
   for (int y = 0; y <= WORLD_HEIGHT; y++) {
     at = (int)(y * cell_height);
-    DrawLine(map.x, at + map.y, map.w + map.x, at + map.y, GRAY);
+    DrawLine(map.pos.x, at + map.pos.y, map.w + map.pos.x, at + map.pos.y, GRAY);
   }
 }
 
@@ -123,7 +124,7 @@ void update_camera(Cam *camera, Vec2 player) {
 int main(void)
 {
   // Define mini map position and size
-  Map map = {20, 20, 300, 300, {0}};
+  Map map = {{20, 20}, 300, 300, {0}};
   map.ratio.x = (float)map.w / (float)WORLD_WIDTH;
   map.ratio.y = (float)map.h / (float)WORLD_HEIGHT;
 
@@ -131,7 +132,7 @@ int main(void)
 
   Cam camera = {
     {0.0f, -1.0f},    // Camera direction
-    {0}, {0}, {0}
+    {0}, {0}, {0}     // FOV key points
   };
 
   update_camera(&camera, player);
