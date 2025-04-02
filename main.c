@@ -56,6 +56,16 @@ float vec2_len(Vec2 v) {
   return sqrtf(vec2_square_len(v));
 }
 
+Vec2 vec2_norm(Vec2 v) {
+  float len = vec2_len(v);
+  if (len == 0) return (Vec2){0, 0};
+  return (Vec2){v.x / len, v.y / len};
+}
+
+float vec2_dot(Vec2 a, Vec2 b) {
+  return a.x * b.x + a.y * b.y;
+}
+
 Vec2 vec2_rotate(Vec2 v, float angle) {
   float ca = cosf(angle);
   float sa = sinf(angle);
@@ -250,8 +260,9 @@ void render_world(Vec2 player, Cam camera) {
     res = cast_ray(player, camera, factor);
 
     if (res.wall != 0) {
-      Vec2 wd = vec2_sub(res.ct, res.vp);
-      float d = vec2_len(wd);
+      Vec2 wd = vec2_sub(res.ct, player);
+      Vec2 ndir = vec2_norm(camera.dir);
+      float d = vec2_dot(wd, ndir);
       int h = (int)(WINDOW_HEIGHT / d);
       int y1 = WINDOW_HEIGHT * 0.5 - h / 2;
       int y2 = WINDOW_HEIGHT * 0.5 + h / 2;
