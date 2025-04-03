@@ -183,16 +183,12 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
         float yd_len = vec2_square_len(yd);
 
         if (xd_len <= yd_len) {
-            if (xt.x > 0 && xt.x <= 8 && xt.y > 0 && xt.y <= 8) {
-                is_ray_hit_wall(&res, xt, step_x, step_y);
-                sx += step_x;
-            }
+            is_ray_hit_wall(&res, xt, step_x, step_y);
+            sx += step_x;
         }
         else {
-            if (yt.x > 0 && yt.x <= 8 && yt.y > 0 && yt.y <= 8) {
-                is_ray_hit_wall(&res, yt, step_x, step_y);
-                sy += step_y;
-            }
+            is_ray_hit_wall(&res, yt, step_x, step_y);
+            sy += step_y;
         }
 
         max++;
