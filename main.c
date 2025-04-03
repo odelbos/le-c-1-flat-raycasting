@@ -111,9 +111,9 @@ void is_ray_hit_wall(CastResult *res, Vec2 p, int step_x, int step_y)
     Vec2 veps = {(float)step_x * 0.00001f, (float)step_y * 0.00001f};
     p = vec2_add(p, veps);
 
-    int x = (int)floor(p.x);
-    int y = (int)floor(p.y);
     if (p.x >= 0 && p.x < 8 && p.y >= 0 && p.y < 8) {
+        int x = (int)floor(p.x);
+        int y = (int)floor(p.y);
         res->cell_x = x;
         res->cell_y = y;
         res->wall = world[y][x];
