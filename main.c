@@ -143,6 +143,7 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
     // b = y1 - ((y2 - y1) / (x2 - x1)) x1
     // b = y1 - m * x1
 
+    // FIX: What if (res.vp.x - player.x) == 0 ...
     float m = (res.vp.y - player.y) / (res.vp.x - player.x);
     float b = player.y - m * player.x;
 
@@ -174,7 +175,7 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
         y = m * (float)sx + b;
         xt = (Vec2){(float)sx, y};
 
-        // FIX: What if m = 0 ...
+        // FIX: What if m == 0 ...
         x = ((float)sy - b) / m;
         yt = (Vec2){x, (float)sy};
 
