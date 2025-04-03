@@ -174,6 +174,7 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
         y = m * (float)sx + b;
         xt = (Vec2){(float)sx, y};
 
+        // FIX: What if m = 0 ...
         x = ((float)sy - b) / m;
         yt = (Vec2){x, (float)sy};
 
@@ -197,7 +198,7 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
     return res;
 }
 
-void render_map(Map map)
+void render_map_world(Map map)
 {
     DrawRectangle(map.pos.x, map.pos.y, map.w, map.h, BLACK);
 
@@ -258,6 +259,12 @@ void render_map_camera(Map map, Vec2 player, Cam camera)
         Vec2 mp = world_to_map(map, r.ct);
         DrawCircle((int)mp.x, (int)mp.y, 2.5f, RED);
     }
+}
+
+void render_map(Map map, Vec2 player, Cam camera)
+{
+    render_map_world(map);
+    render_map_camera(map, player, camera);
 }
 
 void render_world(Vec2 player, Cam camera)
@@ -338,10 +345,7 @@ int main(void)
         BeginDrawing();
         ClearBackground(BACKGROUND);
         render_world(player, camera);
-        if (show_map) {
-            render_map(map);
-            render_map_camera(map, player, camera);
-        }
+        if (show_map) render_map(map, player, camera);
         EndDrawing();
     }
 
