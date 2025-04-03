@@ -294,6 +294,7 @@ void update_camera(Cam *camera, Vec2 player)
 
 int main(void)
 {
+    bool show_map = true;
     Vec2 move_speed = {0.05f, 0.05f};
     float rot_speed = 0.025f;
 
@@ -318,6 +319,8 @@ int main(void)
         // float t = GetFrameTime();
         // printf("t = %f\n", t);
 
+        if (IsKeyPressed(KEY_M)) show_map = !show_map;
+
         if (IsKeyDown(KEY_UP)) {
             player = vec2_add(player, vec2_mul(camera.dir, move_speed));
             update_camera(&camera, player);
@@ -339,8 +342,10 @@ int main(void)
         BeginDrawing();
         ClearBackground(BACKGROUND);
         render_world(player, camera);
-        render_map(map);
-        render_map_camera(map, player, camera);
+        if (show_map) {
+            render_map(map);
+            render_map_camera(map, player, camera);
+        }
         EndDrawing();
     }
 
