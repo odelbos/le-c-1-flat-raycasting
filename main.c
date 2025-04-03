@@ -279,7 +279,7 @@ void update_camera(Cam *camera, Vec2 player) {
 
 int main(void)
 {
-  Vec2 move_speed = {0.025f, 0.025f};
+  Vec2 move_speed = {0.05f, 0.05f};
   float rot_speed = 0.025f;
 
   // Define mini map position and size
@@ -290,7 +290,7 @@ int main(void)
   Vec2 player = {5.5f, 7.5f};
 
   Cam camera = {
-    {0.0f, -1.0f},    // Camera direction
+    {0.0f, -0.5f},    // Camera direction
     {0}, {0}, {0}     // FOV key points
   };
   update_camera(&camera, player);
