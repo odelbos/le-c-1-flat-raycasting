@@ -10,6 +10,10 @@
 #define WORLD_WIDTH    8
 #define WORLD_HEIGHT   8
 
+#define CAST_XY        0
+#define CAST_X         1
+#define CAST_Y         2
+
 int world[WORLD_HEIGHT][WORLD_WIDTH] = {
     {1, 0, 0, 0, 0, 0, 2, 3},
     {0, 0, 1, 2, 1, 0, 0, 1},
@@ -136,16 +140,27 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
     // x2 = wp.x
     // y2 = wp.y
     // --
-    // y = m x + b
-    // x = (y - b) / m
-    // m = (y2 - y1) / (x2 - x1)
+    // y = m * x + b
     // --
-    // b = y1 - ((y2 - y1) / (x2 - x1)) x1
+    // y1 = m * x1 + b
+    // y2 = m * x2 + b
+    // --
     // b = y1 - m * x1
+    // b = y2 - m * x2
+    // y2 - m * x2 = y1 - m * x1
+    // m = (y2 - y1) / (x2 - x1)
 
-    // FIX: What if (res.vp.x - player.x) == 0 ...
-    float m = (res.vp.y - player.y) / (res.vp.x - player.x);
-    float b = player.y - m * player.x;
+    float m, b;
+    int cast_kind = CAST_XY;
+
+    if (res.vp.x - player.x == 0) {
+        cast_kind = CAST_Y;
+    }
+    else {
+        m = (res.vp.y - player.y) / (res.vp.x - player.x);
+        if (m == 0) cast_kind = CAST_X;
+        else b = player.y - m * player.x;
+    }
 
     int step_x = 1;
     int step_y = 1;
@@ -168,29 +183,42 @@ CastResult cast_ray(Vec2 player, Cam camera, float factor)
     }
 
     float x, y;
-    Vec2 xt, yt, xd, yd;
+    Vec2 st, xt, yt, xd, yd;
     int max = 0;
 
     while (max < 15 && res.wall == 0) {
-        y = m * (float)sx + b;
-        xt = (Vec2){(float)sx, y};
-
-        // FIX: What if m == 0 ...
-        x = ((float)sy - b) / m;
-        yt = (Vec2){x, (float)sy};
-
-        xd = vec2_sub(xt, res.vp);
-        yd = vec2_sub(yt, res.vp);
-        float xd_len = vec2_square_len(xd);
-        float yd_len = vec2_square_len(yd);
-
-        if (xd_len <= yd_len) {
-            is_ray_hit_wall(&res, xt, step_x, step_y);
+        if (cast_kind == CAST_Y) {
+            st = (Vec2){player.x, sy};
+            sy += step_y;
+        }
+        else if (cast_kind == CAST_X) {
+            st = (Vec2){sx, player.y};
             sx += step_x;
         }
         else {
-            is_ray_hit_wall(&res, yt, step_x, step_y);
-            sy += step_y;
+            y = m * (float)sx + b;
+            xt = (Vec2){(float)sx, y};
+
+            x = ((float)sy - b) / m;
+            yt = (Vec2){x, (float)sy};
+
+            xd = vec2_sub(xt, res.vp);
+            yd = vec2_sub(yt, res.vp);
+            float xd_len = vec2_square_len(xd);
+            float yd_len = vec2_square_len(yd);
+
+            if (xd_len <= yd_len) {
+                st = xt;
+                sx += step_x;
+            }
+            else {
+                st = yt;
+                sy += step_y;
+            }
+        }
+
+        if (st.x > 0 && st.x <= 8 && st.y > 0 && st.y <= 8) {
+            is_ray_hit_wall(&res, st, step_x, step_y);
         }
 
         max++;
