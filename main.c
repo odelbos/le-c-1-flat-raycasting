@@ -331,15 +331,15 @@ int main(void)
     float rot_speed = 0.025f;
 
     // Define mini map position and size
-    Map map = {{20, 20}, 200, 200, {0}};
+    Map map = {{20, 20}, 200, 200, {0, 0}};
     map.ratio.x = (float)map.w / (float)WORLD_WIDTH;
     map.ratio.y = (float)map.h / (float)WORLD_HEIGHT;
 
     Vec2 player = {5.5f, 7.5f};
 
     Cam camera = {
-        {0.0f, -0.5f},    // Camera direction
-        {0}, {0}, {0}     // FOV key points
+        {0.0f, -0.5f},             // Camera direction
+        {0, 0}, {0, 0}, {0, 0}     // FOV key points
     };
     update_camera(&camera, player);
 
