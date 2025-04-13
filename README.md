@@ -69,6 +69,7 @@ apt-get install cmake
 
 ```console
 mkdir -p /opt/src
+cd /opt/src
 git clone https://github.com/raysan5/raylib.git
 ```
 
