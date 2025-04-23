@@ -1,3 +1,12 @@
+# --[ DEPRECATED ]--
+
+This repository is deprecated, the algorithm is not efficient.
+
+The project has been restarted from scratch using DDA (Digital Differential Analysis) algorithm.
+
+New repository : [le-c-2-dda-raycasting](https://github.com/odelbos/le-c-2-dda-raycasting)
+
+
 # Synopsis
 
 Basic Flat Raycasting Algorithm in C.
